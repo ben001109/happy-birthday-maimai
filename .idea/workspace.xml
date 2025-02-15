@@ -4,9 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ee6183e3-a8ba-46c7-ba78-d8feab6259fb" name="Changes" comment="Revert &quot;Added the Project&quot;&#10;&#10;This reverts commit 887001dfaefd0192352cdfa7d9f2d24d5de81dd3.">
+    <list default="true" id="ee6183e3-a8ba-46c7-ba78-d8feab6259fb" name="Changes" comment="補充並加強相關功能：&#10;1.新增再見按鈕&#10;2.讓相片可以多張顯示&#10;3.將音效完整化">
+      <change afterPath="$PROJECT_DIR$/resources/thanks.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/GUI.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/message.txt" beforeDir="false" afterPath="$PROJECT_DIR$/resources/message.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/test1.wav" beforeDir="false" afterPath="$PROJECT_DIR$/resources/test1.wav" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/test2.wav" beforeDir="false" afterPath="$PROJECT_DIR$/resources/test2.wav" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -332,7 +336,7 @@
       <workItem from="1739647041116" duration="18000" />
       <workItem from="1739647071369" duration="1459000" />
       <workItem from="1739648899890" duration="542000" />
-      <workItem from="1739649451972" duration="7030000" />
+      <workItem from="1739649451972" duration="9286000" />
     </task>
     <task id="LOCAL-00001" summary="Added the Project">
       <option name="closed" value="true" />
@@ -374,7 +378,15 @@
       <option name="project" value="LOCAL" />
       <updated>1739654768133</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="補充並加強相關功能：&#10;1.新增再見按鈕&#10;2.讓相片可以多張顯示&#10;3.將音效完整化">
+      <option name="closed" value="true" />
+      <created>1739656802219</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1739656802219</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -433,13 +445,14 @@
     <MESSAGE value="Added the Project" />
     <MESSAGE value="Added the test sound wav file" />
     <MESSAGE value="Revert &quot;Added the Project&quot;&#10;&#10;This reverts commit 887001dfaefd0192352cdfa7d9f2d24d5de81dd3." />
-    <option name="LAST_COMMIT_MESSAGE" value="Revert &quot;Added the Project&quot;&#10;&#10;This reverts commit 887001dfaefd0192352cdfa7d9f2d24d5de81dd3." />
+    <MESSAGE value="補充並加強相關功能：&#10;1.新增再見按鈕&#10;2.讓相片可以多張顯示&#10;3.將音效完整化" />
+    <option name="LAST_COMMIT_MESSAGE" value="補充並加強相關功能：&#10;1.新增再見按鈕&#10;2.讓相片可以多張顯示&#10;3.將音效完整化" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/maimai_s_birthday_card$GUI.coverage" NAME="GUI Coverage Results" MODIFIED="1739652776951" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/maimai_s_birthday_card$test.coverage" NAME="test Coverage Results" MODIFIED="1739652105738" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/maimai_birthday_card_python_version$main.coverage" NAME="main Coverage Results" MODIFIED="1739644737607" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/maimai_s_birthday_card$main.coverage" NAME="main Coverage Results" MODIFIED="1739655912878" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/maimai_s_birthday_card$main.coverage" NAME="main Coverage Results" MODIFIED="1739658610193" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/maimai_s_birthday_card$audio.coverage" NAME="audio Coverage Results" MODIFIED="1739653473379" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/maimai_birthday_card_python_version$GUI.coverage" NAME="GUI Coverage Results" MODIFIED="1739644813540" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
