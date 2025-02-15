@@ -1,14 +1,14 @@
 # GUI.py
 import sys
 import os
-import shutil  # 用來複製資料夾
+import shutil  # 用於複製資料夾
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel,
     QPushButton, QMessageBox, QDialog, QHBoxLayout
 )
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QPixmap
-import audio  # 匯入音訊模組
+import audio  # 匯入我們的音訊模組
 
 def load_message_file(file_path="resources/message.txt"):
     """
@@ -82,7 +82,7 @@ class GiftDialog(QDialog):
 class MainWindow(QMainWindow):
     """
     主介面：整合主標題、小標題、逐行敘述、打開禮物按鈕、特別感謝表與手動關閉按鈕，
-    並將所有文字置中對齊。
+    並將所有文字置中對齊。程式流程：打開 → 測試 → 逐行敘述 → 禮物 → 特別感謝 → 手動關閉。
     """
     def __init__(self, narration_lines, thanks_lines, parent=None):
         super().__init__(parent)
@@ -97,7 +97,7 @@ class MainWindow(QMainWindow):
         central_widget = QWidget(self)
         self.setCentralWidget(central_widget)
         self.layout = QVBoxLayout(central_widget)
-        self.layout.setAlignment(Qt.AlignCenter)  # 整個 layout 置中
+        self.layout.setAlignment(Qt.AlignCenter)
 
         # 主標題
         self.title_label = QLabel("VTuber 生日賀卡", self)
@@ -126,7 +126,7 @@ class MainWindow(QMainWindow):
         self.gift_button.setFixedWidth(200)
         self.layout.addWidget(self.gift_button)
 
-        # 手動關閉按鈕（初始隱藏）
+        # 手動關閉按鈕（初始隱藏），顯示文字「再見」
         self.close_button = QPushButton("再見", self)
         self.close_button.setStyleSheet("font-size: 18px; padding: 10px;")
         self.close_button.clicked.connect(self.manual_close)
@@ -144,7 +144,7 @@ class MainWindow(QMainWindow):
         # QTimer 用來逐行更新敘述文字
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_narrative)
-        self.timer.start(2000)  # 每 2000 毫秒更新一次
+        self.timer.start(2000)
 
     def update_narrative(self):
         if self.current_index < len(self.narration_lines):
@@ -157,18 +157,23 @@ class MainWindow(QMainWindow):
             self.current_index += 1
         else:
             self.timer.stop()
-            # 敘述全部顯示完畢後，顯示打開禮物按鈕與手動關閉按鈕，
-            # 並更新特別感謝表
+            # 敘述全部顯示完畢後，顯示打開禮物與再見按鈕，並更新特別感謝表
             self.gift_button.show()
             self.close_button.show()
             self.thanks_label.setText("特別感謝：\n" + "\n".join(self.thanks_lines))
 
     def open_gift(self):
         """
-        按下「打開禮物」後，播放禮物錄音並顯示禮物圖片對話框（含上下切換）。
+        按下「打開禮物」後，先停止背景音效，再播放禮物錄音，
+        並開啟禮物對話框（含圖片上下切換）。
         """
+        # 停止背景音效
+        if hasattr(self, "bg_player") and self.bg_player is not None:
+            self.bg_player.stop()
+        # 撥放禮物錄音
         gift_audio = "resources/gift_audio.wav"
         audio.play_audio_files([gift_audio], playback_library="pyaudio")
+        # 定義多張禮物圖片
         gift_images = [
             "resources/gift_image1.png",
             "resources/gift_image2.png",
@@ -179,16 +184,20 @@ class MainWindow(QMainWindow):
 
     def manual_close(self):
         """
-        按下「再見」按鈕後，將 resources 資料夾全部複製到一個新資料夾「生日快樂」，
-        然後彈出提醒視窗，告知使用者可直接開啟該資料夾觀看語音及圖片，
-        按下確認後程式自動結束。
+        按下「再見」按鈕後，先停止所有背景進程，
+        然後將 resources 資料夾內所有檔案複製到新資料夾「生日快樂」，
+        接著彈出提醒訊息，告知使用者可直接打開該資料夾觀看語音及圖片，
+        最後所有流程執行完畢後再停止所有進程並退出程式。
         """
-        # 取得資源資料夾的路徑（假設在執行檔同目錄下）
+        # 先停止計時器與背景音效
+        self.timer.stop()
+        if hasattr(self, "bg_player") and self.bg_player is not None:
+            self.bg_player.stop()
+
+        # 執行資源資料夾複製
         src_folder = audio.resource_path("resources")
-        # 將複製目的地設為與 src_folder 同層的新資料夾 "生日快樂"
         dest_folder = os.path.join(os.path.dirname(src_folder), "生日快樂")
         try:
-            # 使用 shutil.copytree 複製（Python 3.8+ 可用 dirs_exist_ok=True）
             import shutil
             shutil.copytree(src_folder, dest_folder, dirs_exist_ok=True)
         except Exception as e:
@@ -200,16 +209,16 @@ class MainWindow(QMainWindow):
             )
             return
 
-        # 彈出提醒視窗
+        # 彈出提醒訊息
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle("提醒")
-        msg_box.setText("如果想要直接聽語音或是看圖片的話可以直接打開生日快樂資料夾去看")
+        msg_box.setText("如果想要直接聽語音或是看圖片的話，請直接打開「生日快樂」資料夾去看")
         msg_box.setStandardButtons(QMessageBox.Ok)
         ok_button = msg_box.button(QMessageBox.Ok)
         ok_button.setText("好，我知道了")
         msg_box.exec_()
 
-        # 結束程式
+        # 最後退出程式，停止所有進程
         sys.exit(0)
 
 class TestDialog(QDialog):
@@ -279,6 +288,8 @@ def start_gui():
 
     # 建立主介面（整合逐行敘述、打開禮物、特別感謝與手動關閉）
     main_window = MainWindow(narration_lines, thanks_lines)
+    # 將背景音效執行緒存入主介面，供停止使用
+    main_window.bg_player = bg_player
     main_window.show()
 
     sys.exit(app.exec_())
