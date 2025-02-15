@@ -4,16 +4,13 @@ import os
 import shutil  # 用於複製資料夾
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel,
-    QPushButton, QMessageBox, QDialog, QHBoxLayout
+    QPushButton, QMessageBox, QDialog, QHBoxLayout, QSizePolicy
 )
 from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QPixmap
-import audio  # 匯入我們的音訊模組
+from PyQt5.QtGui import QPixmap, QFont
+import audio  # 匯入音訊模組
 
 def load_message_file(file_path="resources/message.txt"):
-    """
-    從指定文字檔中讀取敘述文字，每行視為一段。
-    """
     try:
         abs_path = audio.resource_path(file_path)
         with open(abs_path, "r", encoding="utf-8") as f:
@@ -24,9 +21,6 @@ def load_message_file(file_path="resources/message.txt"):
         return ["無法讀取訊息檔案。"]
 
 def load_thanks_file(file_path="resources/thanks.txt"):
-    """
-    從指定文字檔中讀取特別感謝內容，每行視為一筆資料。
-    """
     try:
         abs_path = audio.resource_path(file_path)
         with open(abs_path, "r", encoding="utf-8") as f:
@@ -37,9 +31,6 @@ def load_thanks_file(file_path="resources/thanks.txt"):
         return ["感謝您的支持！"]
 
 class GiftDialog(QDialog):
-    """
-    禮物對話框：顯示多張禮物圖片，可使用上一張/下一張按鈕切換。
-    """
     def __init__(self, gift_images, parent=None):
         super().__init__(parent)
         self.setWindowTitle("禮物")
@@ -69,7 +60,7 @@ class GiftDialog(QDialog):
         if pixmap.isNull():
             self.image_label.setText("無法載入圖片")
         else:
-            self.image_label.setPixmap(pixmap.scaled(400, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            self.image_label.setPixmap(pixmap.scaled(450, 450, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def show_prev(self):
         self.current_index = (self.current_index - 1) % len(self.gift_images)
@@ -80,10 +71,6 @@ class GiftDialog(QDialog):
         self.update_image()
 
 class MainWindow(QMainWindow):
-    """
-    主介面：整合主標題、小標題、逐行敘述、打開禮物按鈕、特別感謝表與手動關閉按鈕，
-    並將所有文字置中對齊。程式流程：打開 → 測試 → 逐行敘述 → 禮物 → 特別感謝 → 手動關閉。
-    """
     def __init__(self, narration_lines, thanks_lines, parent=None):
         super().__init__(parent)
         self.setWindowTitle("VTuber 生日賀卡")
@@ -91,6 +78,7 @@ class MainWindow(QMainWindow):
         self.narration_lines = narration_lines
         self.thanks_lines = thanks_lines
         self.current_index = 0
+        self.base_width = 600  # 基準寬度
         self.init_ui()
 
     def init_ui(self):
@@ -101,50 +89,47 @@ class MainWindow(QMainWindow):
 
         # 主標題
         self.title_label = QLabel("VTuber 生日賀卡", self)
-        self.title_label.setStyleSheet("font-size: 24px; font-weight: bold;")
+        self.title_label.setStyleSheet("font-weight: bold;")
         self.title_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.title_label)
 
         # 小標題
         self.subtitle_label = QLabel("特別獻上我們最真摯的祝福", self)
-        self.subtitle_label.setStyleSheet("font-size: 18px; color: gray;")
+        self.subtitle_label.setStyleSheet("color: gray;")
         self.subtitle_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.subtitle_label)
 
         # 敘述文字區域
         self.narrative_label = QLabel("", self)
         self.narrative_label.setWordWrap(True)
-        self.narrative_label.setStyleSheet("font-size: 16px;")
         self.narrative_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.narrative_label)
 
         # 打開禮物按鈕（初始隱藏）
         self.gift_button = QPushButton("打開禮物", self)
-        self.gift_button.setStyleSheet("font-size: 18px; padding: 10px;")
         self.gift_button.clicked.connect(self.open_gift)
         self.gift_button.hide()
-        self.gift_button.setFixedWidth(200)
+        self.gift_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.layout.addWidget(self.gift_button)
 
-        # 手動關閉按鈕（初始隱藏），顯示文字「再見」
+        # 手動關閉按鈕（初始隱藏）
         self.close_button = QPushButton("再見", self)
-        self.close_button.setStyleSheet("font-size: 18px; padding: 10px;")
         self.close_button.clicked.connect(self.manual_close)
         self.close_button.hide()
-        self.close_button.setFixedWidth(200)
+        self.close_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.layout.addWidget(self.close_button)
 
         # 特別感謝區域
         self.thanks_label = QLabel("", self)
         self.thanks_label.setWordWrap(True)
-        self.thanks_label.setStyleSheet("font-size: 14px; color: blue;")
         self.thanks_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.thanks_label)
 
-        # QTimer 用來逐行更新敘述文字
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_narrative)
         self.timer.start(2000)
+
+        self.update_fonts()
 
     def update_narrative(self):
         if self.current_index < len(self.narration_lines):
@@ -157,44 +142,35 @@ class MainWindow(QMainWindow):
             self.current_index += 1
         else:
             self.timer.stop()
-            # 敘述全部顯示完畢後，顯示打開禮物與再見按鈕，並更新特別感謝表
             self.gift_button.show()
             self.close_button.show()
             self.thanks_label.setText("特別感謝：\n" + "\n".join(self.thanks_lines))
 
     def open_gift(self):
-        """
-        按下「打開禮物」後，先停止背景音效，再播放禮物錄音，
-        並開啟禮物對話框（含圖片上下切換）。
-        """
-        # 停止背景音效
         if hasattr(self, "bg_player") and self.bg_player is not None:
             self.bg_player.stop()
-        # 撥放禮物錄音
         gift_audio = "resources/gift_audio.wav"
         audio.play_audio_files([gift_audio], playback_library="pyaudio")
-        # 定義多張禮物圖片
         gift_images = [
             "resources/gift_image1.png",
             "resources/gift_image2.png",
-            "resources/gift_image3.png"
+            "resources/gift_image3.png",
+            "resources/gift_image4.png",
+            "resources/gift_image5.png",
+            "resources/gift_image6.png",
+            "resources/gift_image7.png",
+            "resources/gift_image8.png",
+            "resources/gift_image9.png",
+            "resources/gift_image0.png"
         ]
         gift_dialog = GiftDialog(gift_images, self)
         gift_dialog.exec_()
 
     def manual_close(self):
-        """
-        按下「再見」按鈕後，先停止所有背景進程，
-        然後將 resources 資料夾內所有檔案複製到新資料夾「生日快樂」，
-        接著彈出提醒訊息，告知使用者可直接打開該資料夾觀看語音及圖片，
-        最後所有流程執行完畢後再停止所有進程並退出程式。
-        """
-        # 先停止計時器與背景音效
         self.timer.stop()
         if hasattr(self, "bg_player") and self.bg_player is not None:
             self.bg_player.stop()
 
-        # 執行資源資料夾複製
         src_folder = audio.resource_path("resources")
         dest_folder = os.path.join(os.path.dirname(src_folder), "生日快樂")
         try:
@@ -209,7 +185,6 @@ class MainWindow(QMainWindow):
             )
             return
 
-        # 彈出提醒訊息
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle("提醒")
         msg_box.setText("如果想要直接聽語音或是看圖片的話，請直接打開「生日快樂」資料夾去看")
@@ -218,13 +193,32 @@ class MainWindow(QMainWindow):
         ok_button.setText("好，我知道了")
         msg_box.exec_()
 
-        # 最後退出程式，停止所有進程
         sys.exit(0)
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.update_fonts()
+
+    def update_fonts(self):
+        scale = self.width() / self.base_width
+        title_font = QFont()
+        title_font.setPointSize(max(10, int(24 * scale)))
+        self.title_label.setFont(title_font)
+        subtitle_font = QFont()
+        subtitle_font.setPointSize(max(8, int(18 * scale)))
+        self.subtitle_label.setFont(subtitle_font)
+        narrative_font = QFont()
+        narrative_font.setPointSize(max(8, int(16 * scale)))
+        self.narrative_label.setFont(narrative_font)
+        thanks_font = QFont()
+        thanks_font.setPointSize(max(8, int(14 * scale)))
+        self.thanks_label.setFont(thanks_font)
+        button_font = QFont()
+        button_font.setPointSize(max(8, int(18 * scale)))
+        self.gift_button.setFont(button_font)
+        self.close_button.setFont(button_font)
+
 class TestDialog(QDialog):
-    """
-    預先測試對話框：讓使用者確認測試音訊是否正常播放。
-    """
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("預先音訊測試")
@@ -262,7 +256,6 @@ class TestDialog(QDialog):
 def start_gui():
     app = QApplication(sys.argv)
 
-    # 先進行音訊測試：使用預設測試音檔 (test1.wav 與 test2.wav)
     try:
         audio.test_audio_file_playback()
     except Exception as e:
@@ -273,22 +266,17 @@ def start_gui():
         )
         sys.exit(1)
 
-    # 顯示預先測試對話框，讓使用者確認音訊測試結果
     test_dialog = TestDialog()
     if test_dialog.exec_() != QDialog.Accepted:
         sys.exit(0)
 
-    # 啟動背景音效（播放背景音樂）
     background_files = ["resources/background.wav"]
     bg_player = audio.play_audio_files(background_files, playback_library="pyaudio")
 
-    # 從外部文字檔讀取敘述訊息與特別感謝表
     narration_lines = load_message_file("resources/message.txt")
     thanks_lines = load_thanks_file("resources/thanks.txt")
 
-    # 建立主介面（整合逐行敘述、打開禮物、特別感謝與手動關閉）
     main_window = MainWindow(narration_lines, thanks_lines)
-    # 將背景音效執行緒存入主介面，供停止使用
     main_window.bg_player = bg_player
     main_window.show()
 
