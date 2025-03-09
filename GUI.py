@@ -152,6 +152,7 @@ class MainWindow(QMainWindow):
         gift_audio = "resources/gift_audio.wav"
         audio.play_audio_files([gift_audio], playback_library="pyaudio")
         gift_images = [
+            "resources/gift_image0.png",
             "resources/gift_image1.png",
             "resources/gift_image2.png",
             "resources/gift_image3.png",
@@ -161,7 +162,12 @@ class MainWindow(QMainWindow):
             "resources/gift_image7.png",
             "resources/gift_image8.png",
             "resources/gift_image9.png",
-            "resources/gift_image0.png"
+            "resources/solu.png",
+            "resources/hasaki.png",
+            "resources/fenmeow.png",
+            "resources/macaroni",
+            "resources/laso.png",
+            "resources/gift_image15.png",
         ]
         gift_dialog = GiftDialog(gift_images, self)
         gift_dialog.exec_()
