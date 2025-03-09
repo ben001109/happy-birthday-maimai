@@ -1,0 +1,2 @@
+pyaudio
+PyQt5
