@@ -4,7 +4,7 @@ import os
 import shutil  # 用於複製資料夾
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel,
-    QPushButton, QMessageBox, QDialog, QHBoxLayout, QSizePolicy
+    QPushButton, QMessageBox, QDialog, QHBoxLayout, QSizePolicy,QSlider
 )
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QPixmap, QFont
@@ -32,6 +32,10 @@ def load_thanks_file(file_path="resources/thanks.txt"):
 
 # 新增：禮物語音控制與圖片顯示合併對話框
 class GiftCombinedDialog(QDialog):
+    """
+    禮物合併對話框：同時顯示禮物圖片與錄音控制面板（使用水平佈局），
+    並新增進度條及時間顯示，可拖動調整播放位置。
+    """
     def __init__(self, gift_images, gift_audio, parent=None):
         super().__init__(parent)
         self.setWindowTitle("禮物")
@@ -39,9 +43,13 @@ class GiftCombinedDialog(QDialog):
         self.current_index = 0
         self.gift_audio = gift_audio
         self.init_ui()
-        # 啟動禮物錄音播放器
+        # 啟動禮物錄音播放器（獨立執行緒）
         self.gift_audio_player = audio.play_gift_audio(self.gift_audio, playback_library="pyaudio")
-        
+        # 建立 timer 用來更新進度條與時間標籤
+        self.progress_timer = QTimer(self)
+        self.progress_timer.timeout.connect(self.update_progress)
+        self.progress_timer.start(500)  # 每500毫秒更新一次
+
     def init_ui(self):
         main_layout = QHBoxLayout(self)
         # 左側：圖片區域
@@ -57,7 +65,7 @@ class GiftCombinedDialog(QDialog):
         self.next_button.clicked.connect(self.show_next)
         nav_layout.addWidget(self.next_button)
         image_layout.addLayout(nav_layout)
-        main_layout.addLayout(image_layout)
+        main_layout.addLayout(image_layout, stretch=1)
         
         # 右側：語音控制區域
         control_layout = QVBoxLayout()
@@ -73,16 +81,30 @@ class GiftCombinedDialog(QDialog):
         self.rewind_button = QPushButton("快退 1秒", self)
         self.rewind_button.clicked.connect(self.rewind)
         control_layout.addWidget(self.rewind_button)
-        main_layout.addLayout(control_layout)
+        # 新增進度條
+        self.slider = QSlider(Qt.Horizontal, self)
+        self.slider.setMinimum(0)
+        self.slider.setMaximum(100)
+        self.slider.sliderReleased.connect(self.slider_released)
+        control_layout.addWidget(self.slider)
+        # 新增時間顯示標籤
+        self.time_label = QLabel("0:00 / 0:00", self)
+        self.time_label.setAlignment(Qt.AlignCenter)
+        control_layout.addWidget(self.time_label)
         
+        main_layout.addLayout(control_layout, stretch=0)
         self.update_image()
-        
+    
     def update_image(self):
         pixmap = QPixmap(audio.resource_path(self.gift_images[self.current_index]))
         if pixmap.isNull():
             self.image_label.setText("無法載入圖片")
         else:
             self.image_label.setPixmap(pixmap.scaled(450, 450, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+    
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.update_image()
     
     def show_prev(self):
         self.current_index = (self.current_index - 1) % len(self.gift_images)
@@ -108,9 +130,29 @@ class GiftCombinedDialog(QDialog):
     def rewind(self):
         self.gift_audio_player.rewind(1)
     
+    def update_progress(self):
+        if self.gift_audio_player.current_wf is not None:
+            total = self.gift_audio_player.total_frames
+            current = self.gift_audio_player.current_position
+            if total > 0:
+                percent = int((current / total) * 100)
+                self.slider.setValue(percent)
+                # 計算時間（秒）
+                duration = total / self.gift_audio_player.framerate
+                current_time = current / self.gift_audio_player.framerate
+                self.time_label.setText(f"{int(current_time//60)}:{int(current_time%60):02d} / {int(duration//60)}:{int(duration%60):02d}")
+    
+    def slider_released(self):
+        if self.gift_audio_player.current_wf is not None:
+            total = self.gift_audio_player.total_frames
+            new_percent = self.slider.value() / 100.0
+            new_pos = int(total * new_percent)
+            self.gift_audio_player.set_position(new_pos)
+    
     def closeEvent(self, event):
         self.gift_audio_player.stop()
         super().closeEvent(event)
+
 
 class MainWindow(QMainWindow):
     def __init__(self, narration_lines, thanks_lines, parent=None):
@@ -188,22 +230,16 @@ class MainWindow(QMainWindow):
         # 直接使用 GiftCombinedDialog 同時顯示圖片與語音控制
         gift_audio = "resources/gift_audio.wav"
         gift_images = [
-            "resources/gift_image0.png",
-            "resources/gift_image1.png",
-            "resources/gift_image2.png",
-            "resources/gift_image3.png",
-            "resources/gift_image4.png",
-            "resources/gift_image5.png",
-            "resources/gift_image6.png",
-            "resources/gift_image7.png",
-            "resources/gift_image8.png",
-            "resources/gift_image9.png",
+            "resources/comic_p1.png",
+            "resources/comic_p2.png",
+            "resources/comic_p3.png",
+            "resources/comic_p4.png",
+            "resources/the_reaper_of_soul.png",
             "resources/solu.png",
             "resources/hasaki.png",
             "resources/fenmeow.png",
             "resources/macaroni",
             "resources/laso.png",
-            "resources/gift_image15.png",
         ]
         combined_dialog = GiftCombinedDialog(gift_images, gift_audio, self)
         combined_dialog.exec_()
@@ -634,7 +670,7 @@ class GiftCombinedDialog(QDialog):
     def closeEvent(self, event):
         self.gift_audio_player.stop()
         super().closeEvent(event)
-        
+
 def start_gui():
     app = QApplication(sys.argv)
 

@@ -101,12 +101,16 @@ def test_audio_file_playback(playback_library: str = check_audio_installation())
 #-------------------------------
 # 以下為禮物錄音播放控制功能
 
+
 class GiftAudioPlayer(AudioPlayer):
     def __init__(self, file, delay: float = 0.1, playback_library: str = 'pyaudio'):
         # 將 file 包裝成單一元素列表
         super().__init__([file], delay, playback_library)
         self.paused = False
         self.current_wf = None  # 當前播放的 wave 物件
+        self.total_frames = 0
+        self.framerate = 0
+        self.current_position = 0
 
     def play_with_pyaudio(self):
         if pyaudio is None:
@@ -117,6 +121,8 @@ class GiftAudioPlayer(AudioPlayer):
             abs_path = resource_path(file_path)
             wf = wave.open(abs_path, 'rb')
             self.current_wf = wf
+            self.total_frames = wf.getnframes()
+            self.framerate = wf.getframerate()
         except Exception as e:
             print(f"開啟 {file_path} 失敗：{e}")
             return
@@ -138,6 +144,7 @@ class GiftAudioPlayer(AudioPlayer):
                 time.sleep(0.1)
                 continue
             stream.write(data)
+            self.current_position = wf.tell()
             data = wf.readframes(chunk)
         stream.stop_stream()
         stream.close()
@@ -153,20 +160,27 @@ class GiftAudioPlayer(AudioPlayer):
     def fast_forward(self, seconds):
         if self.current_wf is not None:
             current_pos = self.current_wf.tell()
-            framerate = self.current_wf.getframerate()
-            new_pos = current_pos + int(seconds * framerate)
-            if new_pos > self.current_wf.getnframes():
-                new_pos = self.current_wf.getnframes()
+            new_pos = current_pos + int(seconds * self.framerate)
+            if new_pos > self.total_frames:
+                new_pos = self.total_frames
             self.current_wf.setpos(new_pos)
+            self.current_position = new_pos
 
     def rewind(self, seconds):
         if self.current_wf is not None:
             current_pos = self.current_wf.tell()
-            framerate = self.current_wf.getframerate()
-            new_pos = current_pos - int(seconds * framerate)
+            new_pos = current_pos - int(seconds * self.framerate)
             if new_pos < 0:
                 new_pos = 0
             self.current_wf.setpos(new_pos)
+            self.current_position = new_pos
+
+    def set_position(self, position):
+        """設定播放位置，position 為幀數。"""
+        if self.current_wf is not None and 0 <= position <= self.total_frames:
+            self.current_wf.setpos(position)
+            self.current_position = position
+
 
 def play_gift_audio(file, delay: float = 0.1, playback_library: str = 'pyaudio'):
     gift_player = GiftAudioPlayer(file, delay, playback_library)
