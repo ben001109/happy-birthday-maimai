@@ -10,7 +10,6 @@ def resource_path(relative_path: str) -> str:
     取得資源檔案的絕對路徑，適用於開發環境與打包成 exe 後。
     """
     try:
-        # PyInstaller 打包後，資源會放在 sys._MEIPASS 目錄中
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
@@ -25,9 +24,7 @@ except ImportError:
 class AudioPlayer(threading.Thread):
     def __init__(self, file_list, delay: float = 0.1, playback_library: str = 'pyaudio'):
         """
-        :param file_list: 要播放的音訊檔案路徑列表（檔案格式須為 WAV）
-        :param delay: 每個檔案播放間隔的延遲秒數
-        :param playback_library: 撥放使用的套件，目前僅支援 'pyaudio'
+        撥放一般音訊檔案。
         """
         super().__init__()
         self.file_list = file_list
@@ -45,7 +42,6 @@ class AudioPlayer(threading.Thread):
         if pyaudio is None:
             print("pyaudio 模組未安裝！")
             return
-
         for file_path in self.file_list:
             if self._stop_event.is_set():
                 break
@@ -55,7 +51,6 @@ class AudioPlayer(threading.Thread):
             except Exception as e:
                 print(f"開啟 {file_path} 失敗：{e}")
                 continue
-
             p = pyaudio.PyAudio()
             try:
                 stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
@@ -67,7 +62,6 @@ class AudioPlayer(threading.Thread):
                 wf.close()
                 p.terminate()
                 continue
-
             chunk = 1024
             data = wf.readframes(chunk)
             while data and not self._stop_event.is_set():
@@ -84,21 +78,13 @@ class AudioPlayer(threading.Thread):
 
 def play_audio_files(file_list, delay: float = 0.1, playback_library: str = 'pyaudio'):
     """
-    啟動一個 AudioPlayer 執行緒來撥放音訊檔案。
-    :param file_list: 音訊檔案路徑列表（WAV 格式）
-    :param delay: 每個檔案之間的延遲秒數
-    :param playback_library: 使用的播放庫，目前僅支援 'pyaudio'
-    :return: 回傳 AudioPlayer 執行緒物件
+    撥放一般音訊檔案。
     """
     player = AudioPlayer(file_list, delay, playback_library)
     player.start()
     return player
 
 def check_audio_installation() -> str:
-    """
-    檢查是否有安裝 pyaudio。
-    :return: 若 pyaudio 可用則回傳 "pyaudio"，否則回傳 "None"。
-    """
     if pyaudio is not None:
         print("檢查結果：pyaudio 已安裝。")
         return "pyaudio"
@@ -107,15 +93,86 @@ def check_audio_installation() -> str:
         return "None"
 
 def test_audio_file_playback(playback_library: str = check_audio_installation()):
-    """
-    測試音檔撥放功能，使用預設的測試音檔（例如 test1.wav 與 test2.wav）。
-    :param playback_library: 指定使用的撥放庫，預設為 check_audio_installation() 的結果。
-    """
     test_files = ["resources/test1.wav", "resources/test2.wav"]
     print(f"使用 {playback_library} 撥放音效測試中...")
     player = play_audio_files(test_files, playback_library=playback_library)
     player.join()
 
-# __main__ 區塊保持空白
+#-------------------------------
+# 以下為禮物錄音播放控制功能
+
+class GiftAudioPlayer(AudioPlayer):
+    def __init__(self, file, delay: float = 0.1, playback_library: str = 'pyaudio'):
+        # 將 file 包裝成單一元素列表
+        super().__init__([file], delay, playback_library)
+        self.paused = False
+        self.current_wf = None  # 當前播放的 wave 物件
+
+    def play_with_pyaudio(self):
+        if pyaudio is None:
+            print("pyaudio 模組未安裝！")
+            return
+        file_path = self.file_list[0]
+        try:
+            abs_path = resource_path(file_path)
+            wf = wave.open(abs_path, 'rb')
+            self.current_wf = wf
+        except Exception as e:
+            print(f"開啟 {file_path} 失敗：{e}")
+            return
+        p = pyaudio.PyAudio()
+        try:
+            stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                            channels=wf.getnchannels(),
+                            rate=wf.getframerate(),
+                            output=True)
+        except Exception as e:
+            print(f"建立 pyaudio stream 失敗 ({file_path})：{e}")
+            wf.close()
+            p.terminate()
+            return
+        chunk = 1024
+        data = wf.readframes(chunk)
+        while data and not self._stop_event.is_set():
+            if self.paused:
+                time.sleep(0.1)
+                continue
+            stream.write(data)
+            data = wf.readframes(chunk)
+        stream.stop_stream()
+        stream.close()
+        wf.close()
+        p.terminate()
+
+    def pause(self):
+        self.paused = True
+
+    def resume(self):
+        self.paused = False
+
+    def fast_forward(self, seconds):
+        if self.current_wf is not None:
+            current_pos = self.current_wf.tell()
+            framerate = self.current_wf.getframerate()
+            new_pos = current_pos + int(seconds * framerate)
+            if new_pos > self.current_wf.getnframes():
+                new_pos = self.current_wf.getnframes()
+            self.current_wf.setpos(new_pos)
+
+    def rewind(self, seconds):
+        if self.current_wf is not None:
+            current_pos = self.current_wf.tell()
+            framerate = self.current_wf.getframerate()
+            new_pos = current_pos - int(seconds * framerate)
+            if new_pos < 0:
+                new_pos = 0
+            self.current_wf.setpos(new_pos)
+
+def play_gift_audio(file, delay: float = 0.1, playback_library: str = 'pyaudio'):
+    gift_player = GiftAudioPlayer(file, delay, playback_library)
+    gift_player.start()
+    return gift_player
+
+#-------------------------------
 if __name__ == "__main__":
     pass
