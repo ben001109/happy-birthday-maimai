@@ -25,6 +25,8 @@ class AudioPlayer(threading.Thread):
     def __init__(self, file_list, delay: float = 0.1, playback_library: str = 'pyaudio'):
         """
         撥放一般音訊檔案。
+        :param file_list: WAV 檔案路徑列表
+        :param delay: 撥放間隔
         """
         super().__init__()
         self.file_list = file_list
@@ -36,7 +38,7 @@ class AudioPlayer(threading.Thread):
         if self.playback_library == 'pyaudio':
             self.play_with_pyaudio()
         else:
-            print("目前僅支援 pyaudio，請確認設定。")
+            print("目前僅支援 pyaudio。")
 
     def play_with_pyaudio(self):
         if pyaudio is None:
@@ -100,7 +102,6 @@ def test_audio_file_playback(playback_library: str = check_audio_installation())
 
 #-------------------------------
 # 以下為禮物錄音播放控制功能
-
 
 class GiftAudioPlayer(AudioPlayer):
     def __init__(self, file, delay: float = 0.1, playback_library: str = 'pyaudio'):
@@ -176,11 +177,9 @@ class GiftAudioPlayer(AudioPlayer):
             self.current_position = new_pos
 
     def set_position(self, position):
-        """設定播放位置，position 為幀數。"""
         if self.current_wf is not None and 0 <= position <= self.total_frames:
             self.current_wf.setpos(position)
             self.current_position = position
-
 
 def play_gift_audio(file, delay: float = 0.1, playback_library: str = 'pyaudio'):
     gift_player = GiftAudioPlayer(file, delay, playback_library)
