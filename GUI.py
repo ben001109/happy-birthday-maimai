@@ -76,8 +76,9 @@ class AutoScalingDialog(QDialog):
 class TestDialog(AutoScalingDialog):
     def __init__(self, parent=None):
         super().__init__(parent, base_width=400)
+        # 將 style sheet 調整為較大的字體
+        self.setStyleSheet("QDialog { font-weight: bold; font-size: 32px; }")
         self.setWindowTitle("預先音訊測試")
-        self.setStyleSheet("QDialog { font-weight: bold; }")
         self.setup_ui()
 
     def setup_ui(self):
@@ -111,11 +112,11 @@ class TestDialog(AutoScalingDialog):
 
 
 # 新增：企劃介紹對話框
-class PlanDialog(AutoScalingDialog):
+class PlanDialog(QDialog):
     def __init__(self, plan_lines, parent=None):
-        super().__init__(parent, base_width=400)
+        super().__init__(parent)
         self.setWindowTitle("企劃介紹")
-        self.setStyleSheet("QDialog { font-weight: bold; }")
+        self.setFixedSize(1600, 900)  # 調整為 1200x675
         self.plan_lines = plan_lines
         self.current_index = 0
         self.init_ui()
@@ -124,23 +125,29 @@ class PlanDialog(AutoScalingDialog):
         self.timer.start(2000)
 
     def init_ui(self):
-        # 使用堆疊布局來實現背景圖片與文字疊加
-        self.stack_layout = QVBoxLayout(self)
+        # 背景圖片 label
         self.bg_label = QLabel(self)
-        self.bg_label.setAlignment(Qt.AlignCenter)
+        self.bg_label.setGeometry(0, 0, self.width(), self.height())
         bg_pixmap = QPixmap(audio.resource_path("resources/plan_background.png"))
-        self.bg_label.setPixmap(bg_pixmap)
-        # 設定透明度50%
-        opacity_effect = QGraphicsOpacityEffect()
+        if not bg_pixmap.isNull():
+            self.bg_label.setPixmap(
+                bg_pixmap.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation))
+        self.bg_label.setAlignment(Qt.AlignCenter)
+        # 設定 50% 透明度
+        opacity_effect = QGraphicsOpacityEffect(self.bg_label)
         opacity_effect.setOpacity(0.5)
         self.bg_label.setGraphicsEffect(opacity_effect)
+
+        # 文字標籤，覆蓋在背景上
         self.text_label = QLabel("", self)
+        self.text_label.setGeometry(0, 0, self.width(), self.height())
         self.text_label.setAlignment(Qt.AlignCenter)
         self.text_label.setWordWrap(True)
-        self.text_label.setStyleSheet("background-color: transparent; color: black;")
-        self.stack_layout.addWidget(self.bg_label)
-        self.stack_layout.addWidget(self.text_label)
-        self.setLayout(self.stack_layout)
+        self.text_label.setStyleSheet(
+            "background-color: transparent; color: black; font-size: 35px; font-weight: bold;")
+
+        # 將背景圖片放到底層
+        self.bg_label.lower()
 
     def update_text(self):
         if self.current_index < len(self.plan_lines):
@@ -156,8 +163,12 @@ class PlanDialog(AutoScalingDialog):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.bg_label.resize(self.size())
-
+        self.bg_label.setGeometry(0, 0, self.width(), self.height())
+        self.text_label.setGeometry(0, 0, self.width(), self.height())
+        bg_pixmap = QPixmap(audio.resource_path("resources/plan_background.png"))
+        if not bg_pixmap.isNull():
+            self.bg_label.setPixmap(
+                bg_pixmap.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation))
 
 # 更新：禮物合併對話框，包含圖片與語音控制（加進度條與時間標籤）
 class GiftCombinedDialog(QDialog):
@@ -221,7 +232,7 @@ class GiftCombinedDialog(QDialog):
         if pixmap.isNull():
             self.image_label.setText("無法載入圖片")
         else:
-            self.image_label.setPixmap(pixmap.scaled(450, 450, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            self.image_label.setPixmap(pixmap.scaled(500, 500, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -279,7 +290,7 @@ class MainWindow(QMainWindow):
     def __init__(self, narration_lines, thanks_lines, parent=None):
         super().__init__(parent)
         self.setWindowTitle("VTuber 生日賀卡")
-        self.setGeometry(100, 100, 600, 700)
+        self.setGeometry(100, 100, 1000, 1150)
         self.narration_lines = narration_lines
         self.thanks_lines = thanks_lines
         self.current_index = 0
@@ -332,7 +343,7 @@ class MainWindow(QMainWindow):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_narrative)
-        self.timer.start(2000)
+        self.timer.start(1500)
 
         self.update_fonts()
 
@@ -364,11 +375,19 @@ class MainWindow(QMainWindow):
             "resources/macaroni",
             "resources/laso.png",
             "resources/zombie.png",
+            "resources/麥麥(梵楀).png",
+            "resources/麥麥(阿樂).png",
+            "resources/麥麥(獸努).png",
+            "resources/麥麥(FAa).png",
+            "resources/lastpage.jpg"
         ]
         combined_dialog = GiftCombinedDialog(gift_images, gift_audio, self)
         combined_dialog.exec_()
 
     def open_plan(self):
+        # 停止所有正在播放的音樂（例如背景音樂）
+        if hasattr(self, "bg_player") and self.bg_player is not None:
+            self.bg_player.stop()
         plan_lines = load_plan_file("resources/plan.txt")
         plan_dialog = PlanDialog(plan_lines, self)
         plan_dialog.exec_()
