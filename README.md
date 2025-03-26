@@ -32,6 +32,13 @@ python main.py
 
 ## 許可
 本項目採用 [Apache License 2.0](LICENSE) 許可。
+本項目之預覽圖片由[獸努](https://x.com/Soluflyfirefly)提供
+本項目所有圖片均已向繪師進行授權
+[梵偊](https://x.com/wuming86484767)
+[阿樂](https://x.com/rapi971272)
+[獸努](https://x.com/Soluflyfirefly)
+[FAa](https://x.com/Wnghu1)
+[為桑](https://x.com/WeyasKayur)
 
 ---
 
@@ -69,3 +76,10 @@ Contributions are welcome! Please fork this repository and submit a pull request
 
 ## License
 This project is licensed under the [Apache License 2.0](LICENSE).
+This project's social preview picture is provided by [獸努](https://x.com/Soluflyfirefly)
+In this project all picture are having licences by their artist
+[梵偊](https://x.com/wuming86484767)
+[阿樂](https://x.com/rapi971272)
+[獸努](https://x.com/Soluflyfirefly)
+[FAa](https://x.com/Wnghu1)
+[為桑](https://x.com/WeyasKayur)
