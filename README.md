@@ -38,7 +38,7 @@ python main.py
 [阿樂](https://x.com/rapi971272)
 [獸努](https://x.com/Soluflyfirefly)
 [FAa](https://x.com/Wnghu1)
-[為桑](https://x.com/WeyasKayur)
+[微桑](https://x.com/WeyasKayur)
 
 ---
 
@@ -82,4 +82,4 @@ In this project all picture are having licences by their artist
 [阿樂](https://x.com/rapi971272)
 [獸努](https://x.com/Soluflyfirefly)
 [FAa](https://x.com/Wnghu1)
-[為桑](https://x.com/WeyasKayur)
+[微桑](https://x.com/WeyasKayur)
